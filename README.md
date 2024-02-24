@@ -1,4 +1,4 @@
-# TSMixer Forecaster for Ready Tensor
+# TSMixer Forecaster
 
 TSMixer for the Forecasting problem category as per Ready Tensor specifications. TAMixer is an ALL MLP
 lightweight model for forecasting.
@@ -107,7 +107,7 @@ pip install -r requirements.txt
 
 ## LICENSE
 
-This project is provided under the MIT License. Please see the [LICENSE](LICENSE) file for more information.
+This project is provided under the Apache 2.0 License. Please see the [LICENSE](LICENSE) file for more information.
 
 ## Contact Information
 
