@@ -3,8 +3,7 @@ import warnings
 import joblib
 import numpy as np
 import pandas as pd
-from typing import List, Union, Optional, Tuple, Dict
-from darts.models.forecasting.tft_model import TFTModel
+from typing import List, Union, Optional, Tuple
 from darts import TimeSeries
 from schema.data_schema import ForecastingSchema
 from sklearn.exceptions import NotFittedError
