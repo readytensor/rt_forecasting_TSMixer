@@ -290,6 +290,7 @@ class ConditionalFeatureMixing(nn.Module):
             - The transformed static features tensor for monitoring or further processing.
         """
         x = x.to(self.device)
+        x_static = x_static.to(self.device)
         v = self.fr_static(
             x_static
         )  # Transform static features to match output channels.
