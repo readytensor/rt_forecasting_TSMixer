@@ -43,8 +43,11 @@ class RevIN(nn.Module):
         self.last = None
         if self.affine:
             self._init_params()
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     def forward(self, x, mode: str):
+
+        x = x.to(self.device)
         if mode == "norm":
             self._get_statistics(x)
             x = self._normalize(x)
@@ -115,6 +118,7 @@ class TimeBatchNorm2d(nn.BatchNorm1d):
         super().__init__(num_channels * num_time_steps)
         self.num_time_steps = num_time_steps
         self.num_channels = num_channels
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     def forward(self, x: Tensor) -> Tensor:
         """Applies the batch normalization over the last two dimensions of the input tensor.
@@ -129,6 +133,7 @@ class TimeBatchNorm2d(nn.BatchNorm1d):
         Raises:
             ValueError: If the input tensor is not 3D.
         """
+        x = x.to(self.device)
         if x.ndim != 3:
             raise ValueError(
                 f"Expected 3D input tensor, but got {x.ndim}D tensor instead."
@@ -198,6 +203,7 @@ class FeatureMixing(nn.Module):
             if input_channels != output_channels
             else nn.Identity()
         )
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass for the FeatureMixing module.
@@ -208,7 +214,7 @@ class FeatureMixing(nn.Module):
         Returns:
             The output tensor after feature mixing.
         """
-
+        x = x.to(self.device)
         x_proj = self.projection(x)
 
         x = self.norm_before(x)
@@ -265,6 +271,7 @@ class ConditionalFeatureMixing(nn.Module):
             normalize_before=normalize_before,
             norm_type=norm_type,
         )
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     def forward(
         self, x: torch.Tensor, x_static: torch.Tensor
@@ -282,6 +289,8 @@ class ConditionalFeatureMixing(nn.Module):
             - The output tensor after applying conditional feature mixing.
             - The transformed static features tensor for monitoring or further processing.
         """
+        x = x.to(self.device)
+        x_static = x_static.to(self.device)
         v = self.fr_static(
             x_static
         )  # Transform static features to match output channels.
@@ -332,6 +341,7 @@ class TimeMixing(nn.Module):
         self.activation_fn = activation_fn
         self.dropout = nn.Dropout(dropout_rate)
         self.fc1 = nn.Linear(sequence_length, sequence_length)
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Applies the time mixing operations on the input tensor.
@@ -343,6 +353,7 @@ class TimeMixing(nn.Module):
         Returns:
             The normalized output tensor after time mixing transformations.
         """
+        x = x.to(self.device)
         x_temp = feature_to_time(
             x
         )  # Convert feature maps to time dimension. Assumes definition elsewhere.
@@ -402,6 +413,7 @@ class MixerLayer(nn.Module):
             norm_type=norm_type,
             normalize_before=normalize_before,
         )
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass for the MixLayer module.
@@ -412,6 +424,7 @@ class MixerLayer(nn.Module):
         Returns:
             The output tensor after applying time and feature mixing operations.
         """
+        x = x.to(self.device)
         x = self.time_mixing(x)  # Apply time mixing first.
         x = self.feature_mixing(x)  # Then apply feature mixing.
 
@@ -467,6 +480,7 @@ class ConditionalMixerLayer(nn.Module):
             normalize_before=normalize_before,
             norm_type=norm_type,
         )
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     def forward(self, x: torch.Tensor, x_static: torch.Tensor) -> torch.Tensor:
         """Forward pass for the conditional mix layer.
@@ -480,6 +494,7 @@ class ConditionalMixerLayer(nn.Module):
         Returns:
             The output tensor after applying time and conditional feature mixing.
         """
+        x = x.to(self.device)
         x = self.time_mixing(x)  # Apply time mixing first.
         x, _ = self.feature_mixing(
             x, x_static
@@ -729,7 +744,16 @@ class _TSMixer(PLMixedCovariatesModule):
         torch.Tensor
             the output tensor
         """
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         x_cont_past, x_cont_future, x_static = x_in
+        if x_cont_past is not None:
+            x_cont_past = x_cont_past.to(device)
+
+        if x_cont_future is not None:
+            x_cont_future = x_cont_future.to(device)
+
+        if x_static is not None:
+            x_static = x_static.to(device)
         dim_samples, dim_time, dim_variable = 0, 1, 2
         device = x_in[0].device
 
@@ -778,6 +802,7 @@ class _TSMixer(PLMixedCovariatesModule):
             if self.static_channel_provided
             else torch.zeros([x_hist.size(0), 1], dtype=torch.float64)
         )
+        x_hist = x_hist.to(device)
         x_hist_temp = feature_to_time(x_hist)
         x_hist_temp = self.fc_hist(x_hist_temp)
         x_hist = time_to_feature(x_hist_temp)
