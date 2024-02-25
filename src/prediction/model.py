@@ -802,6 +802,7 @@ class _TSMixer(PLMixedCovariatesModule):
             if self.static_channel_provided
             else torch.zeros([x_hist.size(0), 1], dtype=torch.float64)
         )
+        x_hist = x_hist.to(device)
         x_hist_temp = feature_to_time(x_hist)
         x_hist_temp = self.fc_hist(x_hist_temp)
         x_hist = time_to_feature(x_hist_temp)
