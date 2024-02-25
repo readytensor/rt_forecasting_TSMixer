@@ -25,6 +25,8 @@ MixedCovariatesTrainTensorType = Tuple[
     torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor
 ]
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
 
 class RevIN(nn.Module):
     def __init__(self, num_features: int, eps=1e-5, affine=True, subtract_last=False):
@@ -45,6 +47,7 @@ class RevIN(nn.Module):
             self._init_params()
 
     def forward(self, x, mode: str):
+        x = x.to(device)
         if mode == "norm":
             self._get_statistics(x)
             x = self._normalize(x)
@@ -129,6 +132,7 @@ class TimeBatchNorm2d(nn.BatchNorm1d):
         Raises:
             ValueError: If the input tensor is not 3D.
         """
+        x = x.to(device)
         if x.ndim != 3:
             raise ValueError(
                 f"Expected 3D input tensor, but got {x.ndim}D tensor instead."
@@ -208,7 +212,7 @@ class FeatureMixing(nn.Module):
         Returns:
             The output tensor after feature mixing.
         """
-
+        x = x.to(device)
         x_proj = self.projection(x)
 
         x = self.norm_before(x)
@@ -282,6 +286,7 @@ class ConditionalFeatureMixing(nn.Module):
             - The output tensor after applying conditional feature mixing.
             - The transformed static features tensor for monitoring or further processing.
         """
+        x = x.to(device)
         v = self.fr_static(
             x_static
         )  # Transform static features to match output channels.
@@ -343,6 +348,7 @@ class TimeMixing(nn.Module):
         Returns:
             The normalized output tensor after time mixing transformations.
         """
+        x = x.to(device)
         x_temp = feature_to_time(
             x
         )  # Convert feature maps to time dimension. Assumes definition elsewhere.
@@ -412,6 +418,7 @@ class MixerLayer(nn.Module):
         Returns:
             The output tensor after applying time and feature mixing operations.
         """
+        x = x.to(device)
         x = self.time_mixing(x)  # Apply time mixing first.
         x = self.feature_mixing(x)  # Then apply feature mixing.
 
@@ -480,6 +487,7 @@ class ConditionalMixerLayer(nn.Module):
         Returns:
             The output tensor after applying time and conditional feature mixing.
         """
+        x = x.to(device)
         x = self.time_mixing(x)  # Apply time mixing first.
         x, _ = self.feature_mixing(
             x, x_static
@@ -729,7 +737,11 @@ class _TSMixer(PLMixedCovariatesModule):
         torch.Tensor
             the output tensor
         """
+
         x_cont_past, x_cont_future, x_static = x_in
+        x_cont_past = x_cont_past.to(device)
+        x_cont_future = x_cont_future.to(device)
+        x_static = x_static.to(device)
         dim_samples, dim_time, dim_variable = 0, 1, 2
         device = x_in[0].device
 
