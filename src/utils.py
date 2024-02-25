@@ -102,6 +102,7 @@ def set_seeds(seed_value: int) -> None:
         os.environ["PYTHONHASHSEED"] = str(seed_value)
         random.seed(seed_value)
         np.random.seed(seed_value)
+        torch.manual_seed(seed_value)
     else:
         raise ValueError(f"Invalid seed value: {seed_value}. Cannot set seeds.")
 
