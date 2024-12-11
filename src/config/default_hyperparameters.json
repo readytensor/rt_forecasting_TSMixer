@@ -1,5 +1,5 @@
 {
-  "history_forecast_ratio": 10,
+  "history_forecast_ratio": 15,
   "lags_forecast_ratio": 3,
   "hidden_size": 32,
   "ff_dim": 64,
@@ -12,7 +12,7 @@
   "norm_type": "layer",
   "save_checkpoints": true,
   "optimizer_kwargs": {
-    "lr": 1e-3
+    "lr": 0.001
   },
   "use_exogenous": true,
   "random_state": 42,
